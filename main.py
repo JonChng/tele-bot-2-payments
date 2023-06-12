@@ -30,12 +30,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode = constants.ParseMode.HTML)
 
 
-async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Testing."
-    )
-
 #IMMEDIATE SPLIT
 async def instasplit(update: Update, context:ContextTypes.DEFAULT_TYPE):
     #FOR THE IMMEDIATE SPLITTING OF THE BILL
@@ -241,10 +235,6 @@ def main():
         fallbacks=[MessageHandler(filters.Regex("^Done$"), done)],
     )
     app.add_handler(split_handler)
-
-    #HELP HANDLER
-    help_handler = CommandHandler("help", help)
-    app.add_handler(help_handler)
 
     #INSTA HANDLER
     insta_handler = CommandHandler("instasplit", instasplit)
