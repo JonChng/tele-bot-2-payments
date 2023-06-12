@@ -7,8 +7,6 @@ from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, filte
 END = ConversationHandler.END
 TAX, TAX_BUTTON, GST, PEOPLE = range(4)
 
-
-
 dotenv.load_dotenv()
 token = os.environ['TOKEN']
 
@@ -25,8 +23,55 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Welcome to the payment splitting bot. We hope to be able to help you to split your bills easily amongst you and your friends. \n\n"
-             "Please run <b><i>/split</i></b> to begin!",
-        parse_mode =  constants.ParseMode.HTML)
+             "Please run <b><i>/split</i></b> to begin! \n\n"
+             "Alternatively, if you have the final bill (inclusive/exclusive of GST and service charge, run \n\n"
+             "<i><b>/instasplit {final price} {number of people to pay}</b></i>\n\n"
+             "to split the bill immediately.",
+        parse_mode = constants.ParseMode.HTML)
+
+
+async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Testing."
+    )
+
+#IMMEDIATE SPLIT
+async def instasplit(update: Update, context:ContextTypes.DEFAULT_TYPE):
+    #FOR THE IMMEDIATE SPLITTING OF THE BILL
+    try:
+        price = float(context.args[0])
+
+    except ValueError:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Invalid price. Please enter a number."
+        )
+
+    else:
+        price = float(context.args[0])
+
+    try:
+        price = float(context.args[1])
+
+    except ValueError:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Invalid number of people. Please enter a number."
+        )
+
+    else:
+        people = float(context.args[1])
+
+    per_pax = round(price / people, 2)
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Each person is to pay <b>${per_pax:,.2f}</b>. \n\n\n"
+             f"Thank you for using our bot. We hope that it has been helpful.",
+        parse_mode=constants.ParseMode.HTML
+    )
+
 
 #SPLIT FUNCTION
 
@@ -156,7 +201,6 @@ async def people(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         people = int(update.message.text)
 
-
     per_pax = round(price/people, 2)
 
     await context.bot.send_message(
@@ -197,6 +241,14 @@ def main():
         fallbacks=[MessageHandler(filters.Regex("^Done$"), done)],
     )
     app.add_handler(split_handler)
+
+    #HELP HANDLER
+    help_handler = CommandHandler("help", help)
+    app.add_handler(help_handler)
+
+    #INSTA HANDLER
+    insta_handler = CommandHandler("instasplit", instasplit)
+    app.add_handler(insta_handler)
 
     app.run_polling()
 
