@@ -24,7 +24,9 @@ price = 0
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Payment testing bot! Please run /split to split your bill.")
+        text="Welcome to the payment splitting bot. We hope to be able to help you to split your bills easily amongst you and your friends. \n\n"
+             "Please run <b><i>/split</i></b> to begin!",
+        parse_mode =  constants.ParseMode.HTML)
 
 #SPLIT FUNCTION
 
@@ -39,13 +41,22 @@ async def split(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return TAX
 
 async def tax(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.message.chat_id
-    base_value = update.message.text
-
     global price
+    chat_id = update.message.chat_id
 
-    price = base_value
+    try:
+        value = float(update.message.text)
 
+    except ValueError:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Please enter a number.",
+            reply_markup=ForceReply()
+        )
+
+    else:
+        base_value = update.message.text
+        price = float(base_value)
 
     options = [
         [
@@ -54,8 +65,9 @@ async def tax(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
     ]
     await update.message.reply_text(
-        text = f"The base bill was ${base_value:,.2f}. Is service charge included in the price?",
-        reply_markup = InlineKeyboardMarkup(options)
+        text = f"The bill was <b>${price:,.2f}</b>. Is service charge included in the price?",
+        reply_markup = InlineKeyboardMarkup(options),
+        parse_mode = constants.ParseMode.HTML
     )
 
     return TAX_BUTTON
@@ -84,7 +96,8 @@ async def tax_button(update:Update, context: ContextTypes.DEFAULT_TYPE):
         price = round(price * 1.1, 2)
         print(price)
 
-    await query.edit_message_text(text = f"The bill after service charge is ${price:,.2f}.")
+    await query.edit_message_text(text = f"The bill after service charge is <b>${price:,.2f}</b>.",
+                                  parse_mode = constants.ParseMode.HTML)
 
 
     options = [
@@ -114,7 +127,8 @@ async def gst(update:Update, context: ContextTypes.DEFAULT_TYPE):
     if ans == "0":
         price = round(float(price) * 1.08, 2)
 
-    await query.edit_message_text(f"The final bill is: ${price:,.2f}")
+    await query.edit_message_text(f"The final bill after service charge and GST is: <b>${price:,.2f}</b>.",
+                                  parse_mode=constants.ParseMode.HTML)
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -125,10 +139,23 @@ async def gst(update:Update, context: ContextTypes.DEFAULT_TYPE):
     return PEOPLE
 
 async def people(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.message.chat_id
-    people = int(update.message.text)
-
     global price
+
+    chat_id = update.message.chat_id
+
+    try:
+        people = int(update.message.text)
+
+    except ValueError:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Please enter a integer.",
+            reply_markup=ForceReply()
+        )
+
+    else:
+        people = int(update.message.text)
+
 
     per_pax = round(price/people, 2)
 
